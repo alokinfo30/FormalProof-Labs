@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: formalproof
+      POSTGRES_USER: formalproof_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../backend/database/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    networks:
+      - formalproof-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formalproof_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - formalproof-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    environment:
+      DATABASE_URL: postgresql://formalproof_user:${DB_PASSWORD:-changeme}@postgres:5432/formalproof
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
+      JWT_EXPIRATION_HOURS: 24
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - formalproof-network
+    volumes:
+      - ../backend:/app
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+    depends_on:
+      - backend
+    networks:
+      - formalproof-network
+    ports:
+      - "80:80"
+
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ../deployment/nginx.conf:/etc/nginx/nginx.conf
+      - ../frontend/build:/usr/share/nginx/html
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - formalproof-network
+
+networks:
+  formalproof-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,0 +1,72 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules
+npm-debug.log
+frontend/node_modules
+frontend/build
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.python-version
+env/
+venv/
+backend/__pycache__
+backend/*.pyc
+.pytest_cache
+.coverage
+htmlcov/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Docker
+docker-compose.override.yml
+Dockerfile*
+!.dockerignore
+
+# Testing
+test/
+tests/
+coverage/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Secrets
+secrets/
+ssl/
+*.pem
+*.key
+*.crt
+
+# Temporary
+tmp/
+temp/
+*.tmp
+*.temp
+
+# System
+.DS_Store
+Thumbs.db

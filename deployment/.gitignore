@@ -1,0 +1,9 @@
+*.pem
+*.key
+*.crt
+ssl/
+secrets/
+.env
+.env.*
+backup_*.sql
+deploy.log

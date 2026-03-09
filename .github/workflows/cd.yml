@@ -1,0 +1,64 @@
+name: Continuous Deployment
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to staging
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USER }}
+          key: ${{ secrets.STAGING_KEY }}
+          script: |
+            cd /opt/formalproof-staging
+            git pull
+            docker-compose -f docker/docker-compose.yml up -d --build
+            docker system prune -f
+            
+      - name: Run smoke tests
+        run: |
+          sleep 30
+          curl -f http://${{ secrets.STAGING_HOST }}/health || exit 1
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy to production
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.PROD_KEY }}
+          script: |
+            cd /opt/formalproof-labs
+            git pull
+            docker-compose -f docker/docker-compose.yml up -d --build
+            docker system prune -f
+            
+      - name: Health check
+        run: |
+          sleep 30
+          curl -f https://formalproof.io/health || exit 1
+          
+      - name: Notify success
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Production deployment completed successfully!'
+            })

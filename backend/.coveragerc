@@ -1,0 +1,26 @@
+[run]
+source = .
+omit =
+    */tests/*
+    */migrations/*
+    */venv/*
+    */env/*
+    setup.py
+    app.py  # if you want to omit the main app file
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if __name__ == .__main__.:
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if False:
+    if __name__ == "__main__":
+    pass
+    raise ImportError
+
+[html]
+directory = htmlcov

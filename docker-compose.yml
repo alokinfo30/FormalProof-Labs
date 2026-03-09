@@ -1,0 +1,7 @@
+version: '3.8'
+
+include:
+  - docker/docker-compose.yml
+
+# This file simply includes the main compose file for convenience
+# Run: docker-compose up
